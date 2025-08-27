@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eco Bin Cleaners — Booking Calendar Demo</title>
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FullCalendar v6 (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <!-- Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--eco:#16a34a;--eco2:#22c55e}
+    html,body{height:100%}
+    body{font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .brand-gradient{background: linear-gradient(135deg, var(--eco), var(--eco2));}
+    .card{box-shadow:0 10px 25px rgba(0,0,0,.07)}
+    .fc .fc-toolbar-title{font-weight:700}
+    .badge{border:1px solid rgba(0,0,0,.08)}
+    .input{border:1px solid #e5e7eb;border-radius:.75rem;padding:.65rem .9rem}
+    .input:focus{outline:none;border-color:#9ae6b4;box-shadow:0 0 0 4px rgba(16,185,129,.15)}
+    .btn{border-radius:1rem;padding:.8rem 1rem;font-weight:600}
+    .btn-primary{background:linear-gradient(135deg,#16a34a,#22c55e);color:white}
+    .btn-ghost{background:#f3f4f6}
+    .pill{border-radius:999px;padding:.25rem .7rem;background:#ecfdf5;color:#065f46;font-size:.8rem}
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Header -->
+  <header class="brand-gradient text-white">
+    <div class="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-white/15 grid place-items-center">🧼</div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold">Eco Bin Cleaners</h1>
+          <p class="text-white/90 text-sm">Veteran‑owned • Bastrop & Austin, TX</p>
+        </div>
+      </div>
+      <a href="#book" class="btn btn-primary shadow-md">Book Now</a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Calendar Card -->
+    <section class="lg:col-span-2 bg-white rounded-2xl card p-4">
+      <div class="flex items-center justify-between px-2 pb-2">
+        <h2 class="text-xl font-semibold">Schedule</h2>
+        <div class="flex items-center gap-2 text-sm">
+          <span class="pill">Demo — fake bookings</span>
+        </div>
+      </div>
+      <div id="calendar"></div>
+    </section>
+
+    <!-- Booking Panel -->
+    <aside id="book" class="bg-white rounded-2xl card p-6">
+      <h3 class="text-xl font-semibold mb-1">Quick Booking</h3>
+      <p class="text-gray-500 text-sm mb-4">Create a test booking. This demo stores it in memory and shows it in the calendar instantly.</p>
+
+      <form id="bookingForm" class="space-y-3">
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Full name</label>
+          <input class="input w-full" name="customerName" placeholder="Maria Lopez" required />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Email</label>
+          <input class="input w-full" type="email" name="customerEmail" placeholder="maria@example.com" required />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Date</label>
+            <input class="input w-full" type="date" name="date" required />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Start time</label>
+            <input class="input w-full" type="time" name="time" required />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Bins</label>
+            <input class="input w-full" type="number" name="bins" min="1" max="6" value="2" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-700 mb-1">Duration (min)</label>
+            <input class="input w-full" type="number" name="duration" min="10" step="5" value="30" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Service address</label>
+          <input class="input w-full" name="address" placeholder="1129 Catfish Ln, Bastrop, TX" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Notes</label>
+          <textarea class="input w-full" name="notes" rows="2" placeholder="Please text on arrival. Gate code 1234."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Add Booking to Demo Calendar</button>
+        <button id="exportIcs" type="button" class="btn btn-ghost w-full">Download .ics (single booking)</button>
+      </form>
+
+      <div class="mt-6 text-xs text-gray-500">
+        <p>Next step in real life: send this booking to <span class="font-semibold">Google Calendar API</span> and email a confirmation via <span class="font-semibold">Gmail/Nodemailer</span>. This demo focuses on the visual calendar.</p>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Event Drawer -->
+  <div id="drawer" class="fixed inset-x-0 bottom-0 translate-y-full transition-transform duration-300 ease-out">
+    <div class="max-w-6xl mx-auto p-4">
+      <div class="bg-white rounded-2xl card p-5">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h4 id="drawerTitle" class="text-lg font-semibold">Booking details</h4>
+            <p id="drawerSub" class="text-gray-500 text-sm">—</p>
+          </div>
+          <button id="closeDrawer" class="px-3 py-2 rounded-xl bg-gray-100">Close</button>
+        </div>
+        <div id="drawerBody" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Fake seed bookings (local only) ---
+    const seed = [
+      {
+        id: 'bk_1001',
+        customerName: 'Maria Lopez',
+        customerEmail: 'maria@example.com',
+        bins: 2,
+        price: 35.00,
+        address: '1129 Catfish Ln, Bastrop, TX',
+        notes: 'Please text on arrival. Gate code 1234',
+        start: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+2, 10, 0),
+        end:   new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+2, 10, 30)
+      },
+      {
+        id: 'bk_1002',
+        customerName: 'James Carter',
+        customerEmail: 'j.carter@example.com',
+        bins: 3,
+        price: 45.00,
+        address: '3514 Castlewood Dr, Richmond, VA',
+        notes: '',
+        start: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+3, 11, 0),
+        end:   new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+3, 11, 40)
+      },
+      {
+        id: 'bk_1003',
+        customerName: 'Renee Alvarez',
+        customerEmail: 'renee@example.com',
+        bins: 1,
+        price: 25.00,
+        address: 'Barton Springs Rd, Austin, TX',
+        notes: 'Small driveway',
+        start: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+5, 9, 0),
+        end:   new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()+5, 9, 20)
+      }
+    ];
+
+    // Utility: format money and date/time
+    const fmtMoney = n => `$${n.toFixed(2)}`;
+    const fmtDT = dt => dt.toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'short' });
+
+    // Keep a local store (pretend DB)
+    const store = new Map(seed.map(b => [b.id, b]));
+
+    function bookingToEvent(b) {
+      return {
+        id: b.id,
+        title: `${b.customerName} (${b.bins} bin${b.bins>1?'s':''})`,
+        start: b.start,
+        end: b.end,
+        extendedProps: { ...b }
+      }
+    }
+
+    // Init FullCalendar
+    document.addEventListener('DOMContentLoaded', () => {
+      const calendarEl = document.getElementById('calendar');
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        height: 'auto',
+        initialView: window.innerWidth < 640 ? 'listWeek' : 'timeGridWeek',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        },
+        slotMinTime: '07:00:00',
+        slotMaxTime: '19:00:00',
+        nowIndicator: true,
+        selectable: true,
+        events: [...seed.map(bookingToEvent)],
+        eventClick(info){
+          const b = store.get(info.event.id);
+          openDrawer(b);
+        },
+        select(arg){
+          // Prefill the form when selecting on the calendar
+          const date = arg.startStr.split('T')[0];
+          const time = new Date(arg.start).toTimeString().slice(0,5);
+          document.querySelector('input[name="date"]').value = date;
+          document.querySelector('input[name="time"]').value = time;
+        }
+      });
+      calendar.render();
+
+      // Handle form submit -> add event to calendar
+      document.getElementById('bookingForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const date = fd.get('date');
+        const time = fd.get('time');
+        const [h,m] = time.split(':').map(Number);
+        const [y,mo,d] = date.split('-').map(Number);
+        const duration = Number(fd.get('duration')||30);
+        const start = new Date(y, mo-1, d, h, m);
+        const end = new Date(start.getTime() + duration*60000);
+
+        const b = {
+          id: 'bk_' + Math.random().toString(36).slice(2,8),
+          customerName: fd.get('customerName'),
+          customerEmail: fd.get('customerEmail'),
+          bins: Number(fd.get('bins')||1),
+          price: 25 + (Number(fd.get('bins')||1)-1)*10, // simple pricing model
+          address: fd.get('address')||'',
+          notes: fd.get('notes')||'',
+          start, end
+        };
+        store.set(b.id, b);
+        calendar.addEvent(bookingToEvent(b));
+        openDrawer(b);
+        e.target.reset();
+      });
+
+      // Export last selected / example booking as .ics
+      document.getElementById('exportIcs').addEventListener('click', () => {
+        const last = Array.from(store.values()).slice(-1)[0] || seed[0];
+        const ics = toICS(last);
+        const blob = new Blob([ics], {type:'text/calendar'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${last.id}.ics`; a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Drawer logic
+      document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+
+      function openDrawer(b){
+        document.getElementById('drawerTitle').textContent = `${b.customerName} — ${b.bins} bin${b.bins>1?'s':''}`;
+        document.getElementById('drawerSub').textContent = `${fmtDT(b.start)} → ${fmtDT(b.end)}`;
+        document.getElementById('drawerBody').innerHTML = `
+          <div>
+            <div class="text-gray-500">Email</div>
+            <div class="font-medium">${b.customerEmail}</div>
+          </div>
+          <div>
+            <div class="text-gray-500">Address</div>
+            <div class="font-medium">${b.address || '—'}</div>
+          </div>
+          <div>
+            <div class="text-gray-500">Notes</div>
+            <div class="font-medium">${b.notes || '—'}</div>
+          </div>
+          <div>
+            <div class="text-gray-500">Price</div>
+            <div class="font-medium">${fmtMoney(b.price)}</div>
+          </div>
+          <div>
+            <div class="text-gray-500">Booking ID</div>
+            <div class="font-medium">${b.id}</div>
+          </div>
+        `;
+        document.getElementById('drawer').style.transform = 'translateY(0)';
+      }
+      function closeDrawer(){
+        document.getElementById('drawer').style.transform = 'translateY(100%)';
+      }
+    });
+
+    function pad(n){return (n<10?'0':'')+n}
+    function toICS(b){
+      const dt = (d)=> `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+      return `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Eco Bin Cleaners//Booking Demo//EN\nBEGIN:VEVENT\nUID:${b.id}@ecobincleaners.local\nDTSTAMP:${dt(new Date())}\nDTSTART:${dt(b.start)}\nDTEND:${dt(b.end)}\nSUMMARY:Eco Bin Cleaners – ${b.customerName} (${b.bins} bin${b.bins>1?'s':''})\nLOCATION:${(b.address||'').replaceAll('\n',' ')}\nDESCRIPTION:Price ${fmtMoney(b.price)}\\nNotes: ${(b.notes||'').replaceAll('\n',' ')}\\nBooking ID: ${b.id}\nEND:VEVENT\nEND:VCALENDAR`;
+    }
+  </script>
+</body>
+</html>
